@@ -7,7 +7,12 @@ import {
   PauseKey,
 } from "../internal/routing/routing.js";
 import { getInput, printServerHelp } from "../internal/gamelogic/gamelogic.js";
-import { declareAndBind, SimpleQueueType } from "../internal/pubsub/consume.js";
+import {
+  declareAndBind,
+  SimpleQueueType,
+  subscribeMsgPack,
+} from "../internal/pubsub/consume.js";
+import { handlerLogs } from "./handlers.js";
 
 async function main() {
   const rabbitConnString = "amqp://guest:guest@localhost:5672/";
@@ -27,12 +32,13 @@ async function main() {
     }),
   );
 
-  await declareAndBind(
+  await subscribeMsgPack(
     conn,
     ExchangePerilTopic,
     GameLogSlug,
     `${GameLogSlug}.*`,
     SimpleQueueType.Durable,
+    handlerLogs
   );
 
   const confirmChannel = await conn.createConfirmChannel();

@@ -1,3 +1,4 @@
+import { decode } from "@msgpack/msgpack";
 import amqp, { type Channel } from "amqplib";
 
 export enum SimpleQueueType {
@@ -39,12 +40,44 @@ export async function subscribeJSON<T>(
   queueType: SimpleQueueType,
   handler: (data: T) => Promise<AckType> | AckType,
 ): Promise<void> {
+  const deserializer = (data: Buffer): T => {
+    const contentsString = data.toString();
+    return JSON.parse(contentsString);
+  };
+
+  subscribe(conn, exchange, queueName, key, queueType, handler, deserializer);
+}
+
+export async function subscribeMsgPack<T>(
+  conn: amqp.ChannelModel,
+  exchange: string,
+  queueName: string,
+  key: string,
+  queueType: SimpleQueueType,
+  handler: (data: T) => Promise<AckType> | AckType,
+): Promise<void> {
+  const deserializer = (data: Buffer): T => {
+    return decode(data) as T;
+  };
+
+  subscribe(conn, exchange, queueName, key, queueType, handler, deserializer);
+}
+
+export async function subscribe<T>(
+  conn: amqp.ChannelModel,
+  exchange: string,
+  queueName: string,
+  routingKey: string,
+  simpleQueueType: SimpleQueueType,
+  handler: (data: T) => Promise<AckType> | AckType,
+  deserializer: (data: Buffer) => T,
+): Promise<void> {
   const [channel, queue] = await declareAndBind(
     conn,
     exchange,
     queueName,
-    key,
-    queueType,
+    routingKey,
+    simpleQueueType,
   );
 
   await channel.consume(
@@ -52,23 +85,19 @@ export async function subscribeJSON<T>(
     async (msg: amqp.ConsumeMessage | null) => {
       if (!msg) return;
 
-      const contentsString = msg.content.toString();
-      const contentsJSON = JSON.parse(contentsString);
+      const contents = deserializer(msg.content);
 
       try {
-        const ackType = await handler(contentsJSON);
+        const ackType = await handler(contents);
         switch (ackType) {
           case AckType.Ack:
             channel.ack(msg);
-            console.log("Ack message");
             break;
           case AckType.NackRequeue:
             channel.nack(msg, false, true);
-            console.log("NackRequeue message");
             break;
           case AckType.NackDiscard:
             channel.nack(msg, false, false);
-            console.log("NackDiscard message");
             break;
           default:
             const unreachable: never = ackType;

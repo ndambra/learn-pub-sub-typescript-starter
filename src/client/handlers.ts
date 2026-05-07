@@ -10,12 +10,13 @@ import type {
 import { handleMove, MoveOutcome } from "../internal/gamelogic/move.js";
 import { handlePause } from "../internal/gamelogic/pause.js";
 import { AckType } from "../internal/pubsub/consume.js";
-import { publishJSON } from "../internal/pubsub/publish.js";
+import { publishJSON, publishMsgPack } from "../internal/pubsub/publish.js";
 import {
   ExchangePerilTopic,
   WarRecognitionsPrefix,
 } from "../internal/routing/routing.js";
 import { handleWar, WarOutcome } from "../internal/gamelogic/war.js";
+import { publishGameLog } from "./index.js";
 
 export function handlerPause(gs: GameState): (ps: PlayingState) => AckType {
   return (ps: PlayingState): AckType => {
@@ -64,6 +65,7 @@ export function handlerMove(
 
 export function handlerWar(
   gs: GameState,
+  ch: amqp.ConfirmChannel,
 ): (rw: RecognitionOfWar) => Promise<AckType> {
   return async (rw: RecognitionOfWar): Promise<AckType> => {
     try {
@@ -75,7 +77,27 @@ export function handlerWar(
           return AckType.NackRequeue;
         case WarOutcome.OpponentWon:
         case WarOutcome.YouWon:
+          try {
+            await publishGameLog(
+              ch,
+              gs.getUsername(),
+              `${warRes.winner} won a war against ${warRes.loser}`,
+            );
+          } catch (error) {
+            console.error("Error publishing game log:", error);
+            return AckType.NackRequeue;
+          }
+          return AckType.Ack;
         case WarOutcome.Draw:
+          try {
+            await publishGameLog(
+              ch,
+              gs.getUsername(),
+              `A war between  ${warRes.attacker} against and ${warRes.defender}`,
+            );
+          } catch (error) {
+            return AckType.NackRequeue;
+          }
           return AckType.Ack;
         default:
           const unreachable: never = warRes;
@@ -87,3 +109,5 @@ export function handlerWar(
     }
   };
 }
+
+async function handleGameLog(msg: string) {}
