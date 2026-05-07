@@ -1,6 +1,11 @@
 import amqp from "amqplib";
 import { publishJSON } from "../internal/pubsub/publish.js";
-import { ExchangePerilDirect, ExchangePerilTopic, GameLogSlug, PauseKey } from "../internal/routing/routing.js";
+import {
+  ExchangePerilDirect,
+  ExchangePerilTopic,
+  GameLogSlug,
+  PauseKey,
+} from "../internal/routing/routing.js";
 import { getInput, printServerHelp } from "../internal/gamelogic/gamelogic.js";
 import { declareAndBind, SimpleQueueType } from "../internal/pubsub/consume.js";
 
@@ -23,11 +28,11 @@ async function main() {
   );
 
   await declareAndBind(
-    conn, 
-    ExchangePerilTopic, 
-    GameLogSlug, 
-    `${GameLogSlug}.*`, 
-    SimpleQueueType.Durable
+    conn,
+    ExchangePerilTopic,
+    GameLogSlug,
+    `${GameLogSlug}.*`,
+    SimpleQueueType.Durable,
   );
 
   const confirmChannel = await conn.createConfirmChannel();
@@ -42,7 +47,9 @@ async function main() {
       case "pause":
         console.log("Sending pause message...");
         try {
-          await publishJSON(confirmChannel, ExchangePerilDirect, PauseKey, { isPaused: true });
+          await publishJSON(confirmChannel, ExchangePerilDirect, PauseKey, {
+            isPaused: true,
+          });
         } catch (error) {
           console.error("error publishing pause message: ", error);
         }
@@ -50,7 +57,9 @@ async function main() {
       case "resume":
         console.log("Sending resume message...");
         try {
-          await publishJSON(confirmChannel, ExchangePerilDirect, PauseKey, { isPaused: false });
+          await publishJSON(confirmChannel, ExchangePerilDirect, PauseKey, {
+            isPaused: false,
+          });
         } catch (error) {
           console.error("error publishing resume message: ", error);
         }
@@ -63,8 +72,6 @@ async function main() {
         break;
     }
   }
-
-
 }
 
 main().catch((err) => {

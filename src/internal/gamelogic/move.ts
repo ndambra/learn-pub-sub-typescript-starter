@@ -15,7 +15,7 @@ export enum MoveOutcome {
 
 export function getOverlappingLocation(
   p1: Player,
-  p2: Player
+  p2: Player,
 ): Location | null {
   for (const u1 of Object.values(p1.units)) {
     for (const u2 of Object.values(p2.units)) {
@@ -31,7 +31,7 @@ export function handleMove(gs: GameState, move: ArmyMove): MoveOutcome {
   console.log();
   console.log("==== Move Detected ====");
   console.log(
-    `${move.player.username} is moving ${move.units.length} unit(s) to ${move.toLocation}`
+    `${move.player.username} is moving ${move.units.length} unit(s) to ${move.toLocation}`,
   );
   for (const unit of move.units) {
     console.log(`* ${unit.rank}`);
@@ -47,7 +47,7 @@ export function handleMove(gs: GameState, move: ArmyMove): MoveOutcome {
   const overlappingLocation = getOverlappingLocation(player, move.player);
   if (overlappingLocation) {
     console.log(
-      `You have units in ${overlappingLocation}! You are at war with ${move.player.username}!`
+      `You have units in ${overlappingLocation}! You are at war with ${move.player.username}!`,
     );
     console.log("------------------------");
     return MoveOutcome.MakeWar;

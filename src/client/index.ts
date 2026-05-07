@@ -1,16 +1,30 @@
 import amqp from "amqplib";
 import { SimpleQueueType, subscribeJSON } from "../internal/pubsub/consume.js";
-import { ArmyMovesPrefix, ExchangePerilDirect, ExchangePerilTopic, PauseKey, WarRecognitionsPrefix } from "../internal/routing/routing.js";
-import { clientWelcome, commandStatus, getInput, printClientHelp, printQuit } from "../internal/gamelogic/gamelogic.js";
+import {
+  ArmyMovesPrefix,
+  ExchangePerilDirect,
+  ExchangePerilTopic,
+  PauseKey,
+  WarRecognitionsPrefix,
+} from "../internal/routing/routing.js";
+import {
+  clientWelcome,
+  commandStatus,
+  getInput,
+  printClientHelp,
+  printQuit,
+} from "../internal/gamelogic/gamelogic.js";
 import { GameState } from "../internal/gamelogic/gamestate.js";
 import { commandSpawn } from "../internal/gamelogic/spawn.js";
 import { commandMove } from "../internal/gamelogic/move.js";
 import { handlerMove, handlerPause, handlerWar } from "./handlers.js";
 import { publishJSON } from "../internal/pubsub/publish.js";
 
-function publishGameLog(ch: amqp.Channel, username: string, msg: amqp.Message) {
-
-}
+function publishGameLog(
+  ch: amqp.Channel,
+  username: string,
+  msg: amqp.Message,
+) {}
 
 async function main() {
   const rabbitConnString = "amqp://guest:guest@localhost:5672/";
@@ -41,7 +55,7 @@ async function main() {
     pauseUserQueue,
     PauseKey,
     SimpleQueueType.Transient,
-    handlerPause(gameState)
+    handlerPause(gameState),
   );
   await subscribeJSON(
     conn,
@@ -57,7 +71,7 @@ async function main() {
     WarRecognitionsPrefix,
     `${WarRecognitionsPrefix}.*`,
     SimpleQueueType.Durable,
-    handlerWar(gameState)
+    handlerWar(gameState),
   );
 
   while (true) {
@@ -80,7 +94,7 @@ async function main() {
             publishChannel,
             ExchangePerilTopic,
             `${ArmyMovesPrefix}.${username}`,
-            armyMove
+            armyMove,
           );
         } catch (error) {
           console.log((error as Error).message);

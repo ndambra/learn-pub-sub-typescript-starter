@@ -54,7 +54,7 @@ export function handleWar(gs: GameState, rw: RecognitionOfWar): WarResolution {
   console.log();
   console.log("==== War Declared ====");
   console.log(
-    `${rw.attacker.username} has declared war on ${rw.defender.username}!`
+    `${rw.attacker.username} has declared war on ${rw.defender.username}!`,
   );
 
   const player = gs.getPlayerSnap();
@@ -74,17 +74,17 @@ export function handleWar(gs: GameState, rw: RecognitionOfWar): WarResolution {
   const overlappingLocation = getOverlappingLocation(rw.attacker, rw.defender);
   if (!overlappingLocation) {
     console.log(
-      "Error! No units are in the same location. No war will be fought."
+      "Error! No units are in the same location. No war will be fought.",
     );
     console.log("------------------------");
     return { result: WarOutcome.NoUnits };
   }
 
   const attackerUnits: Unit[] = Object.values(rw.attacker.units).filter(
-    (unit) => unit.location === overlappingLocation
+    (unit) => unit.location === overlappingLocation,
   );
   const defenderUnits: Unit[] = Object.values(rw.defender.units).filter(
-    (unit) => unit.location === overlappingLocation
+    (unit) => unit.location === overlappingLocation,
   );
 
   console.log(`${rw.attacker.username}'s units:`);
