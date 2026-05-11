@@ -80,12 +80,20 @@ export async function subscribe<T>(
     simpleQueueType,
   );
 
+  await channel.prefetch(10);
+
   await channel.consume(
     queue.queue,
     async (msg: amqp.ConsumeMessage | null) => {
       if (!msg) return;
 
-      const contents = deserializer(msg.content);
+      let contents: T;
+      try {
+        contents = deserializer(msg.content);
+      } catch (error) {
+        console.error("Could not decode message:", error);
+        return;
+      }
 
       try {
         const ackType = await handler(contents);
@@ -110,5 +118,6 @@ export async function subscribe<T>(
         return;
       }
     },
+    { noAck: false },
   );
 }

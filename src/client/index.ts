@@ -21,6 +21,7 @@ import { commandMove } from "../internal/gamelogic/move.js";
 import { handlerMove, handlerPause, handlerWar } from "./handlers.js";
 import { publishJSON, publishMsgPack } from "../internal/pubsub/publish.js";
 import type { GameLog } from "../internal/gamelogic/logs.js";
+import { commandSpam } from "../internal/gamelogic/spam.js";
 
 export async function publishGameLog(
   ch: amqp.ConfirmChannel,
@@ -121,7 +122,7 @@ async function main() {
         printClientHelp();
         break;
       case "spam":
-        console.log("Spamming not allowed yet!");
+        commandSpam(publishChannel, gameState, words);
         break;
       case "quit":
         printQuit();

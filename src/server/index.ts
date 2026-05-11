@@ -32,17 +32,23 @@ async function main() {
     }),
   );
 
+  const confirmChannel = await conn.createConfirmChannel();
+
   await subscribeMsgPack(
     conn,
     ExchangePerilTopic,
     GameLogSlug,
     `${GameLogSlug}.*`,
     SimpleQueueType.Durable,
-    handlerLogs
+    handlerLogs(),
   );
 
-  const confirmChannel = await conn.createConfirmChannel();
-
+  // Used to run the server from a non-interactive source, like the multiserver.sh file
+  if (!process.stdin.isTTY) {
+    console.log("Non-interactive mode: skipping command input.");
+    return;
+  }
+  
   printServerHelp();
   while (true) {
     const words = await getInput();
